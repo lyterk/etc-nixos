@@ -100,12 +100,12 @@ in
           user = "git";
           identityFile = "~/.ssh/id_ed25519";
         };
-        "github" = {
+        "github.com" = {
           hostname = "github.com";
           user = "git";
           identityFile = "~/.ssh/id_ed25519";
         };
-        "bitbucket" = {
+        "bitbucket.org" = {
           hostname = "bitbucket.org";
           user = "git";
           identityFile = "~/.ssh/id_ed25519";
