@@ -124,6 +124,7 @@ in
       config = rec {
         terminal = "foot";
         modifier = "Mod4";
+        focus.followMouse = "no";
         # Provided by swaybar
         bars = [ ];
         workspaceAutoBackAndForth = true;
