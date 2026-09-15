@@ -32,6 +32,7 @@ let
     wev
     wob
     qrencode
+    transmission_4-qt
     libgourou # Adobe DRM removal
     busybox # Deep debugging in the OS, lsusb
   ];
@@ -127,6 +128,11 @@ in
 
   programs = {
     home-manager.enable = true;
+
+    browserpass = {
+      enable = true;
+      browsers = [ "firefox" ];
+    };
 
     zsh = {
       enable = true;

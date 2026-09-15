@@ -31,6 +31,7 @@ in
     aws-cdk-cli
     nodejs_22
     pnpm
+    influxdb2-cli
     claude-code
     pkgs-unstable.code-cursor
     (python313.withPackages (

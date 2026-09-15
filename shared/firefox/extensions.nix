@@ -27,7 +27,8 @@ let
     # (extensionFn "reveddit-real-time" "real-time-stable@reveddit.com" "navbar")
     (extensionFn "reddit-enhancement-suite" "jid1-xUfzOsOFlzSOXg@jetpack" "navbar")
     # Fix clickbait youtube thumbnails
-    # (extensionFn "dearrow" "deArrow@ajay.app" "navbar")
+    (extensionFn "dearrow" "deArrow@ajay.app" "navbar")
+    (extensionFn "browserpass-ce" "browserpass@maximbaz.com" "navbar")
   ];
 in
 {
