@@ -1,0 +1,272 @@
+:PROPERTIES:
+:ID:       83a61e6a-a12d-45a6-acd1-49743e25199e
+:END:
+#+title: Putting nix-darwin behind a flake
+
+* Request
+:PROPERTIES:
+:ID:       a9ab1c3b-db86-483b-ab4b-4dc4b6e56999
+:END:
+#+BEGIN_QUOTE
+I have this flake.nix and this configuration. Tell me what to change in the flake to support darwin as well. Tell me anything else you think doesn't look good
+#+END_QUOTE
+** Response :ai:
+:PROPERTIES:
+:ID:       d4d24cc7-57dd-4e34-9b29-f2e6ffac8cbd
+:END:
+
+
+#+begin_src elisp
+(setq gptel-context '(("/etc/nixos/flake.nix") ("/etc/nixos/hosts/mac-lyterk/configuration.nix") ("/etc/nixos/hosts/mac-lyterk/home.nix")))
+#+end_src
+
+Your =flake.nix= needs =nix-darwin= as an input, a =darwinSystem= builder, and the =mac-lyterk= host added. The =home.nix= has Linux-specific packages/services that won't build on Darwin — you'll need to split that or guard it.
+
+*Issues I see:*
+- =home.nix= references Linux-only packages (=gtklock=, =blueman=, =bluez=, =kanshi=, =wob=, =wev=, =pamixer=, =pulseaudio=, =mako=, =swayidle=, =sway=, =waybar=, =rofi-wayland=, =grim=, =slurp=, =wl-clipboard=, =xorg.xhost=, =captive-browser=, =gparted=, =parted=). These won't build on Darwin.
+- =configuration.nix= uses =nix-darwin= options (=homebrew=, =security.pam.services.sudo_local=, =system.defaults=, =system.primaryUser=) but your flake doesn't have =nix-darwin= at all.
+- =system.primaryUser= and =homebrew= are nix-darwin-specific — they're already correct in =configuration.nix=, just missing from the flake.
+
+*Flake changes:*
+
+#+begin_src diff
+--- a/flake.nix
++++ b/flake.nix
+@@ -6,6 +6,10 @@
+     home-manager = {
+       url = "github:nix-community/home-manager/release-26.05";
+       inputs.nixpkgs.follows = "nixpkgs";
+     };
++    nix-darwin = {
++      url = "github:LnL7/nix-darwin";
++      inputs.nixpkgs.follows = "nixpkgs";
++    };
+     sops-nix = {
+       url = "github:Mic92/sops-nix";
+       inputs.nixpkgs.follows = "nixpkgs";
+@@ -22,6 +26,7 @@
+     self,
+     nixpkgs,
+     nixpkgs-unstable,
+     home-manager,
++    nix-darwin,
+     sops-nix,
+     stylix,
+     bell,
+@@ -32,6 +37,10 @@
+       config.allowUnfree = true;
+     };
++    pkgs-darwin = import nixpkgs {
++      system = "aarch64-darwin";
++      config.allowUnfree = true;
++    };
+     pkgs-unstable = import nixpkgs-unstable {
+       inherit system;
+       config.allowUnfree = true;
+     };
+   in
+   {
+     formatter.${system} = pkgs.nixpkgs-fmt;
+ 
+     nixosConfigurations =
+       let
+         mkNixosConfiguration =
+           name:
+           nixpkgs.lib.nixosSystem {
+             inherit system;
+             specialArgs = {
+               inherit flakeInputs pkgs-unstable;
+             };
+             modules = [
+               {
+                 networking.hostName = name;
+                 nixpkgs.overlays = [ (_: _: { nixfiles = self.packages.${system}; }) ];
+               }
+               home-manager.nixosModules.home-manager
+               sops-nix.nixosModules.sops
+               stylix.nixosModules.stylix
+               bell.nixosModules.default
+               ./shared
+               (./hosts + "/${name}" + /configuration.nix)
+               (./hosts + "/${name}" + /hardware.nix)
+             ];
+           };
+       in
+       {
+         laptop = mkNixosConfiguration "laptop";
+         desktop = mkNixosConfiguration "desktop";
+         miranda = mkNixosConfiguration "miranda";
+       };
+ 
++    darwinConfigurations =
++      let
++        darwinSystem = "aarch64-darwin";
++        mkDarwinConfiguration =
++          name:
++          nix-darwin.lib.darwinSystem {
++            system = darwinSystem;
++            specialArgs = {
++              inherit flakeInputs;
++              pkgs-unstable = import nixpkgs-unstable {
++                system = darwinSystem;
++                config.allowUnfree = true;
++              };
++            };
++            modules = [
++              home-manager.darwinModules.home-manager
++              (./hosts + "/${name}" + /configuration.nix)
++              {
++                home-manager.useGlobalPkgs = true;
++                home-manager.useUserPackages = true;
++                home-manager.users.lyterk = import (./hosts + "/${name}" + /home.nix);
++              }
++            ];
++          };
++      in
++      {
++        mac-lyterk = mkDarwinConfiguration "mac-lyterk";
++      };
++
+     apps.${system} = ...
+#+end_src
+
+*Also recommended:*
+- Split =home.nix= into a =common.nix= + =linux.nix= + =darwin.nix=, or use =pkgs.stdenv.isLinux= guards around Linux-only packages/services. The sway/wayland config is ~200 lines that simply won't apply on macOS.
+- =mac-lyterk= doesn't need =hardware.nix= — nix-darwin has no hardware module concept, so I omitted it above.
+- Consider whether =aarch64-darwin= or =x86_64-darwin= is correct for your Mac. Apple Silicon = =aarch64-darwin=.
+*
+* Taking inspiration from Mirand
+:PROPERTIES:
+:ID:       1aa2ddd9-fde3-4930-9dd5-3056ebffbc13
+:END:
+#+BEGIN_QUOTE
+I have these nix configuration files for my linux machines. I would like to set up my mac machine. In particular, I want firefox config to be synced, and also want my gpg and ssh keys to be automatically synced to my mac.
+#+END_QUOTE
+** Response :ai:
+:PROPERTIES:
+:ID:       4d9954e9-d7e8-4cf6-b399-c56c053eba41
+:END:
+
+
+(setq gptel-context '(("/etc/nixos/flake.nix" "/etc/nixos/hosts/mac-lyterk/configuration.nix" "/etc/nixos/shared/users/lyterk-home.nix" "/etc/nixos/shared/home-base.nix")))
+
+Looking at your setup, you need to create a =home.nix= for =mac-lyterk= (referenced in =flake.nix= but not shown). Here's what I'd create:
+
+*=/etc/nixos/hosts/mac-lyterk/home.nix=* - pulling in firefox config and SSH/GPG setup from your Linux config:
+
+#+begin_src diff
+--- /dev/null
++++ /etc/nixos/hosts/mac-lyterk/home.nix
+@@ -0,0 +1,80 @@
++{ pkgs, pkgs-unstable, lib, config, ... }:
++
++{
++  imports = [
++    ../../shared/firefox
++  ];
++
++  home.username = "lyterk";
++  home.homeDirectory = "/Users/lyterk";
++  home.stateVersion = "26.05";
++
++  programs = {
++    home-manager.enable = true;
++
++    browserpass = {
++      enable = true;
++      browsers = [ "firefox" ];
++    };
++
++    fish = {
++      enable = true;
++      interactiveShellInit = ''
++        atuin init fish | source
++      '';
++    };
++
++    git = {
++      enable = true;
++      settings = {
++        user.name = "Kevin Lyter";
++        user.email = "code@lyterk.com";
++        commit.gpgsign = true;
++        init = {
++          templateDir = "~/dotfiles/common/git_templates/";
++          defaultBranch = "mainline";
++        };
++        pull.rebase = true;
++        credential.helper = "cache";
++        core.excludesFile = "~/dotfiles/common/gitignore";
++      };
++      signing.key = "0F39E83B";
++    };
++
++    ssh = {
++      enable = true;
++      enableDefaultConfig = false;
++      settings = {
++        "git" = {
++          hostname = "txru.me";
++          port = 65222;
++          user = "git";
++          identityFile = "~/.ssh/id_ed25519";
++        };
++        "github.com" = {
++          hostname = "github.com";
++          user = "git";
++          identityFile = "~/.ssh/id_ed25519";
++        };
++        "bitbucket.org" = {
++          hostname = "bitbucket.org";
++          user = "git";
++          identityFile = "~/.ssh/id_ed25519";
++        };
++        "desktop" = {
++          hostname = "txru.me";
++          port = 65222;
++          user = "lyterk";
++          identityFile = "~/.ssh/id_ed25519";
++        };
++        "remarkable" = {
++          hostname = "10.11.99.1";
++          user = "root";
++          identityFile = "~/.ssh/id_ed25519";
++        };
++      };
++    };
++
++    gpg = {
++      enable = true;
++    };
++  };
++
++  services.gpg-agent = {
++    enable = true;
++    defaultCacheTtl = 3600;
++    maxCacheTtl = 86400;
++    # pinentry-mac is installed via homebrew in configuration.nix
++    pinentry.package = pkgs.pinentry_mac;
++  };
++}
+#+end_src
+
+A few notes:
+
+1. *SSH/GPG keys themselves* must be physically copied (e.g. =scp ~/.ssh/id_ed25519 mac:.ssh/=) — Nix manages /config/, not key material. Consider using =sops-nix= on the mac if you want to manage secrets declaratively.
+
+2. *=pinentry-mac=* is already in your homebrew brews — on macOS =services.gpg-agent= is supported by home-manager but uses launchd instead of systemd.
+
+3. *Firefox*: You'll need to check whether your =shared/firefox= module uses any Linux-only options (like =stylix= targets) — you may need to guard those with =pkgs.stdenv.isDarwin=.
+
+4. *=atuin=* needs to be added to =mac-lyterk/configuration.nix= system packages or home packages if you want shell history sync.
+* Taking more inspiration from Miranda
+:PROPERTIES:
+:ID:       8000b705-3516-4d20-a32f-db3c394a2482
+:END:
+#+BEGIN_QUOTE
+I have these nix configuration files for my linux machines. I would like to set up my mac machine. In particular, I want firefox config to be synced, and also want my gpg and ssh keys to be automatically synced to my mac.
+#+END_QUOTE
+** Response :ai:
+:PROPERTIES:
+:ID:       7f9e8a5a-1acc-41bb-837e-74ca4f865e6b
+:END:

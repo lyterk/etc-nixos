@@ -15,6 +15,10 @@
       url = "github:nix-community/stylix/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nix-darwin = {
+      url = "github:LnL7/nix-darwin";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     bell = {
       url = "github:lyterk/bell";
     };
@@ -33,6 +37,7 @@
       home-manager,
       sops-nix,
       stylix,
+      nix-darwin,
       bell,
       ...
     }@flakeInputs:
@@ -44,6 +49,10 @@
       };
       pkgs-unstable = import nixpkgs-unstable {
         inherit system;
+        config.allowUnfree = true;
+      };
+      pkgs-darwin = import nixpkgs {
+        system = "aarch64-darwin";
         config.allowUnfree = true;
       };
     in
@@ -81,6 +90,38 @@
           desktop = mkNixosConfiguration "desktop";
           miranda = mkNixosConfiguration "miranda";
         };
+
+    darwinConfigurations =
+      let
+        darwinSystem = "aarch64-darwin";
+        mkDarwinConfiguration =
+          name:
+          nix-darwin.lib.darwinSystem {
+            system = darwinSystem;
+            specialArgs = {
+              inherit flakeInputs;
+              pkgs-unstable = import nixpkgs-unstable {
+                system = darwinSystem;
+                config.allowUnfree = true;
+              };
+            };
+            modules = [
+              home-manager.darwinModules.home-manager
+              sops-nix.homeManagerModules.sops
+              (./hosts + "/${name}" + /configuration.nix)
+              {
+                home-manager.useGlobalPkgs = true;
+                home-manager.useUserPackages = true;
+                home-manager.users.lyterk = import (./hosts + "/${name}" + /home.nix);
+                home-manager.extraSpecialArgs = { inherit flakeInputs; };
+              }
+            ];
+          };
+      in
+      {
+        mac-lyterk = mkDarwinConfiguration "mac-lyterk";
+      };
+
 
       apps.${system} =
         let
