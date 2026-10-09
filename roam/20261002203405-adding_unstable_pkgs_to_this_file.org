@@ -1,0 +1,47 @@
+:PROPERTIES:
+:ID:       fb1afdc8-1533-4f1a-8c93-ab1795bb5ade
+:END:
+#+title: Adding unstable-pkgs to this file
+
+* Request
+:PROPERTIES:
+:ID:       771680b0-f463-4edf-841e-cec06c22d2f1
+:END:
+#+BEGIN_QUOTE
+How could I add unstable packages to this? And add emacs31 to the system packages
+#+END_QUOTE
+** Response :ai:
+:PROPERTIES:
+:ID:       67b4656f-51b8-42b6-abd5-e8ce04516d69
+:END:
+
+
+
+#+begin_src elisp
+(setq gptel-context '(("/etc/nixos/flake.nix" "/etc/nixos/shared/default.nix")))
+#+end_src
+
+=pkgs-unstable= is already threaded through via =specialArgs=. You just need to use it in =shared/default.nix=.
+
+#+begin_src diff
+--- a/etc/nixos/shared/default.nix
++++ b/etc/nixos/shared/default.nix
+@@ -3,6 +3,7 @@
+ {
+   config,
+   lib,
+   pkgs,
++  pkgs-unstable,
+   flakeInputs,
+   ...
+ }:
+@@ -95,7 +96,7 @@
+       # editors
+       neovim
+-      emacs30
++      pkgs-unstable.emacs31
+       # shells
+       fish
+#+end_src
+
+That's it. =pkgs-unstable= is passed as a =specialArgs= in your flake, so any module in the tree can accept it as an argument and reference packages from it with =pkgs-unstable.<package>=.

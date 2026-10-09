@@ -20,6 +20,8 @@
 ** [[id:ffe85946-47ce-400f-b86f-b9b2a68e8540][Using personally built packages]]
 ** [[id:5cc1f51c-f601-4725-a3a7-32bbb911dbd8][numpy and nix-ld]]
 ** [[id:b4f427ed-0424-4b7b-b3c5-b09ad8be0ddc][pkgs-unstable]]
+** Integrating nix packagse
+*** [[id:444cca5a-0243-461e-baf7-fb9cd128e64f][tomat]]
 * Multi-user stuff
 ** [[id:62fbd32d-ebe0-4fb1-ad1c-627be318f457][Adding a user]]
 ** [[id:0e612db9-7976-4ba9-98c8-6bb43a83071d][Secrets to multiple users]]
@@ -103,6 +105,7 @@
 ** Fixing the duplicity backup settings for work
 * Imports
 ** TODO [[id:d10b8a35-29cc-49d6-8799-52df47165425][Deep relative import fixing]]
+** Adding unstable-pkgs to this file
 * Machines
 :PROPERTIES:
 :ID:       2f968a86-09bb-45bc-9e5f-1437490c0b3f

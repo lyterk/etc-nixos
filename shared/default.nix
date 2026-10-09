@@ -1,10 +1,11 @@
 # Common configuration enabled on all hosts.
 #
 {
-  config,
-  lib,
+  # config,
+  # lib,
   pkgs,
-  flakeInputs,
+  pkgs-unstable,
+  # flakeInputs,
   ...
 }:
 {
@@ -171,7 +172,7 @@
       gcc
       # editors
       neovim
-      emacs30
+      pkgs-unstable.emacs31
       # shells
       fish
       zsh

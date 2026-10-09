@@ -5,6 +5,7 @@
 {
   config,
   pkgs,
+  pkgs-unstable,
   lib,
   ...
 }:
@@ -68,6 +69,10 @@ in
   # console.keyMap = "dvorak";
   console.keyMap = "us";
 
+  virtualisation.docker.enable = true;
+
+  environment.systemPackages = with pkgs; [ steam ];
+
   services = {
     bell = {
       enable = true;
@@ -88,8 +93,12 @@ in
         };
       };
 
-      emacs.serviceConfig = {
-        Slice = "session.slice";
+      emacs = {
+        enable = true;
+        # package = pkgs-unstable.emacs;
+        serviceConfig = {
+          Slice = "session.slice";
+        };
       };
     };
   };

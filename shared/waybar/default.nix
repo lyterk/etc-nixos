@@ -31,6 +31,7 @@
           "keyboard-state"
           "battery"
           "sway/language"
+          "custom/tomat"
           "tray"
           "clock"
         ];
@@ -148,6 +149,14 @@
           };
           on-click = "pavucontrol";
           on-click-right = "foot -a pw-top pw-top";
+        };
+        "custom/tomat" = {
+          exec = "tomat status";
+          interval = 1;
+          return-type = "json";
+          format = "{}";
+          on-click = "tomat toggle";
+          on-click-right = "tomat skip";
         };
       };
     };

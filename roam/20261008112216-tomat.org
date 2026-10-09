@@ -1,0 +1,115 @@
+:PROPERTIES:
+:ID:       444cca5a-0243-461e-baf7-fb9cd128e64f
+:END:
+#+title: tomat
+
+* Request
+:PROPERTIES:
+:ID:       fe7130b6-b07f-40ad-9555-d903545ee1c7
+:END:
+
+#+BEGIN_QUOTE
+I have this package, tomat. See the readme. It's now installed on nix, and I would also like to configure it. Give me git diffs for how to configure my sway to add this utility.
+#+END_QUOTE
+** Response :ai:
+:PROPERTIES:
+:ID:       ac8a75ee-46c4-4475-850b-4d8d62a8842f
+:END:
+
+
+#+begin_src elisp
+(setq gptel-context '(("~/code/libraries/tomat/README.md" "/etc/nixos/shared/sway/default.nix" "/etc/nixos/shared/waybar/default.nix")))
+#+end_src
+
+Two changes needed: add tomat to the sway keybindings, and add the custom module to waybar.
+
+#+begin_src diff
+diff --git a/shared/waybar/default.nix b/shared/waybar/default.nix
+--- a/shared/waybar/default.nix
++++ b/shared/waybar/default.nix
+@@ -20,6 +20,7 @@
+           "idle_inhibitor"
+           "temperature"
+           "cpu"
+           "memory"
+           "network"
+           "pulseaudio"
+           "backlight"
+           "keyboard-state"
+           "battery"
+           "sway/language"
+           "tray"
++          "custom/tomat"
+           "clock"
+         ];
+@@ -100,6 +101,13 @@
+           on-click-right = "foot -a pw-top pw-top";
+         };
++        "custom/tomat" = {
++          exec = "tomat status";
++          interval = 1;
++          return-type = "json";
++          format = "{}";
++          on-click = "tomat toggle";
++          on-click-right = "tomat skip";
++        };
+       };
+     };
+   };
+#+end_src
+
+#+begin_src diff
+diff --git a/shared/sway/default.nix b/shared/sway/default.nix
+--- a/shared/sway/default.nix
++++ b/shared/sway/default.nix
+@@ -153,6 +153,8 @@
+             "y" = "exec ${pkgs.foot}/bin/foot -e ${pkgs.yazi}/bin/yazi; mode default";
+             "Escape" = "mode default";
+             "Return" = "mode default";
++            "t" = "exec tomat start; mode default";
++            "T" = "exec tomat toggle; mode default";
+           };
+#+end_src
+
+The waybar change adds the tomat JSON module (right side, before the clock). The sway change binds =t= in kevin-mode to start a session and =T= to toggle pause/resume.
+* Icon not appearing
+:PROPERTIES:
+:ID:       0e131182-ebc5-4a83-b7f8-cafee440b49c
+:END:
+
+#+BEGIN_QUOTE
+I have this as my waybar config file in nix, and I'm not seeing the tomat stuff. What could be wrong?
+#+END_QUOTE
+** Response :ai:
+:PROPERTIES:
+:ID:       b294b669-8eb1-4e0a-8198-271585976db6
+:END:
+
+
+(setq gptel-context '(("/etc/nixos/shared/waybar/default.nix")))
+
+A few things to check:
+
+1. *=tomat= not in PATH* – Waybar runs in a systemd service environment which may not have your user PATH. Try using the full path to the =tomat= binary, e.g.:
+   #+begin_src diff
+   - exec = "tomat status";
+   + exec = "${pkgs.tomat}/bin/tomat status";
+   #+end_src
+   (assuming =tomat= is a nix package)
+
+2. *=return-type = "json"= mismatch* – If =tomat status= doesn't actually output JSON, waybar will silently drop it. Either:
+   - Remove =return-type = "json";= if it outputs plain text, or
+   - Ensure =tomat status= outputs valid JSON like ={"text": "25:00", "tooltip": "work"}=
+
+3. *=format= with ={icon}=* – Since there's no =format-icons= defined for =custom/tomat=, ={icon}= will be empty. Simplify to:
+   #+begin_src diff
+   - format = "{icon} 🍅";
+   + format = "{} 🍅";
+   #+end_src
+
+4. *Waybar not restarted* – After a config change, make sure to restart the waybar systemd service:
+   #+begin_src 
+   systemctl --user restart waybar
+   #+end_src
+
+Most likely culprit is *#2* (JSON format mismatch) or *#1* (PATH issue).

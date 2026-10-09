@@ -212,6 +212,8 @@ in
             "o" =
               "exec ${pkgs.rofi}/bin/rofi -dmenu -p 'Exit sway? (yes/no)' | grep -q yes && swaymsg exit; mode default";
             "y" = "exec ${pkgs.foot}/bin/foot -e ${pkgs.yazi}/bin/yazi; mode default";
+            "t" = "exec ${pkgs.tomat}/bin/tomat start; mode default";
+            "u" = "exec ${pkgs.tomat}/bin/tomat toggle; mode default";
             "Escape" = "mode default";
             "Return" = "mode default";
           };

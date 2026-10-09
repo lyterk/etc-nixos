@@ -166,7 +166,7 @@ in
     tailscale.enable = true;
     # privacy vpn
     mullvad-vpn.enable = true;
-    emacs.enable = true;
+    # emacs.enable = true;
     pcscd.enable = true;
     pulseaudio.enable = false;
     # Sound control, better api than pavucontrol. But I still install that anyway
@@ -321,7 +321,6 @@ in
       jq
       mullvad-vpn
       neovim
-      cowsay
       nix-ld
       nixfmt
       pam_u2f
@@ -333,6 +332,7 @@ in
       sops # secrets
       sway
       tailscale
+      tomat # pomodoro timer
       tree
       unzip
       wget

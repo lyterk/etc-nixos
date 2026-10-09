@@ -38,10 +38,7 @@ in
           "browser.ai.control.translations" = "blocked";
         };
         userChrome = ''
-          @namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
-
           /* hides the native tabs */
-
           #TabsToolbar {
             visibility: collapse !important;
           }

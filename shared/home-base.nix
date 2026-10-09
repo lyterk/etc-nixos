@@ -1,4 +1,4 @@
-{ pkgs, lib, ... }:
+{ pkgs, pkgs-unstable, lib, ... }:
 
 let
   shellTools = with pkgs; [
@@ -218,14 +218,15 @@ in
     # };
     emacs = {
       enable = true;
-      package =
-        with pkgs;
-        ((emacsPackagesFor emacs30).emacsWithPackages (
-          epkgs: with epkgs; [
-            vterm
-            treesit-grammars.with-all-grammars
-          ]
-        ));
+      package = pkgs-unstable.emacs;
+      # package =
+      #   with pkgs;
+      #   ((emacsPackagesFor emacs31).emacsWithPackages (
+      #     epkgs: with epkgs; [
+      #       vterm
+      #       treesit-grammars.with-all-grammars
+      #     ]
+      #   ));
     };
     # Redshift screen temperature
     wlsunset = {
@@ -293,9 +294,15 @@ in
       ];
     };
 
-    # kdeconnect = {
-    #   enable = true;
-    # };
+    tomat = {
+      enable = true;
+      settings = {
+        timer = {
+          work = 25;
+          break = 5;
+        };
+      };
+    };
 
     swayidle = {
       enable = true;
