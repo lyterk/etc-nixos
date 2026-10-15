@@ -10,39 +10,46 @@
   home.homeDirectory = "/Users/lyterk";
   home.stateVersion = "26.05";
 
-  stylix = {
+  # stylix = {
+  #   enable = true;
+  #   # Stylix requires an image even on darwin; reuse the same wallpaper
+  #   image = pkgs.fetchurl {
+  #     url = "https://getwallpapers.com/wallpaper/full/a/b/1/126669.jpg";
+  #     hash = "sha256-vxGCjrK1nYsMAQSfeJCb37j4/snuoK367gNw/GemAiw=";
+  #   };
+  #   targets.firefox.profileNames = [ "kevinDefault" ];
+  # };
+
+  # sops = {
+  #   age.keyFile = "/Users/lyterk/.config/sops/age/keys.txt";
+  #   defaultSopsFile = ../../secrets/default-secret.yaml;
+  #   secrets = {
+  #     homeSshPrivateKey = {
+  #       owner = "lyterk";
+  #       mode = "0600";
+  #       path = "/Users/lyterk/.ssh/id_ed25519";
+  #       sopsFile = ../../secrets/sshKeys.yaml;
+  #     };
+  #     gpgCode = {
+  #       path = "/Users/lyterk/.gnupg/code-gpg-key";
+  #       owner = "lyterk";
+  #       mode = "0600";
+  #     };
+  #     gpgKev = {
+  #       path = "/Users/lyterk/.gnupg/kev-gpg-key";
+  #       owner = "lyterk";
+  #       mode = "0600";
+  #     };
+  #   };
+  # };
+
+
+  # Per-user macOS settings managed by nix-plist-manager (exported via
+  # `nix run github:sushydev/nix-plist-manager#current -- mac-user.nix --scope user`).
+  programs.nix-plist-manager = {
     enable = true;
-    # Stylix requires an image even on darwin; reuse the same wallpaper
-    image = pkgs.fetchurl {
-      url = "https://getwallpapers.com/wallpaper/full/a/b/1/126669.jpg";
-      hash = "sha256-vxGCjrK1nYsMAQSfeJCb37j4/snuoK367gNw/GemAiw=";
-    };
-    targets.firefox.profileNames = [ "kevinDefault" ];
+    options = import ./systemConfig/mac-user.nix;
   };
-
-  sops = {
-    age.keyFile = "/Users/lyterk/.config/sops/age/keys.txt";
-    defaultSopsFile = ../../secrets/default-secret.yaml;
-    secrets = {
-      homeSshPrivateKey = {
-        owner = "lyterk";
-        mode = "0600";
-        path = "/Users/lyterk/.ssh/id_ed25519";
-        sopsFile = ../../secrets/sshKeys.yaml;
-      };
-      gpgCode = {
-        path = "/Users/lyterk/.gnupg/code-gpg-key";
-        owner = "lyterk";
-        mode = "0600";
-      };
-      gpgKev = {
-        path = "/Users/lyterk/.gnupg/kev-gpg-key";
-        owner = "lyterk";
-        mode = "0600";
-      };
-    };
-  };
-
 
   programs = {
     home-manager.enable = true;
@@ -54,9 +61,6 @@
 
     fish = {
       enable = true;
-      interactiveShellInit = ''
-        atuin init fish | source
-      '';
     };
 
     git = {
@@ -73,7 +77,7 @@
         credential.helper = "cache";
         core.excludesFile = "~/dotfiles/common/gitignore";
       };
-      signing.key = "0F39E83B";
+      # signing.key = "0F39E83B";
     };
 
     ssh = {
@@ -115,11 +119,11 @@
     };
   };
 
-  services.gpg-agent = {
-    enable = true;
-    defaultCacheTtl = 3600;
-    maxCacheTtl = 86400;
-    # pinentry-mac is installed via homebrew in configuration.nix
-    pinentry.package = pkgs.pinentry_mac;
-  };
+  # services.gpg-agent = {
+  #   enable = true;
+  #   defaultCacheTtl = 3600;
+  #   maxCacheTtl = 86400;
+  #   # pinentry-mac is installed via homebrew in configuration.nix
+  #   pinentry.package = pkgs.pinentry_mac;
+  # };
 }

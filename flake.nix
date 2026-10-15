@@ -15,12 +15,15 @@
       url = "github:nix-community/stylix/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    nix-darwin = {
-      url = "github:LnL7/nix-darwin";
+    nix-darwin ={
+      url = "github:nix-darwin/nix-darwin/nix-darwin-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     bell = {
       url = "github:lyterk/bell";
+    };
+    nix-plist-manager = {
+      url = "github:sushydev/nix-plist-manager";
     };
     # TODO: Decide if this is worth the change
     # firefox-addons = {
@@ -39,6 +42,7 @@
       stylix,
       nix-darwin,
       bell,
+      nix-plist-manager,
       ...
     }@flakeInputs:
     let
@@ -107,13 +111,15 @@
             };
             modules = [
               home-manager.darwinModules.home-manager
-              sops-nix.homeManagerModules.sops
+              nix-plist-manager.darwinModules.default
+              # sops-nix.homeManagerModules.sops
               (./hosts + "/${name}" + /configuration.nix)
               {
                 home-manager.useGlobalPkgs = true;
                 home-manager.useUserPackages = true;
                 home-manager.users.lyterk = import (./hosts + "/${name}" + /home.nix);
                 home-manager.extraSpecialArgs = { inherit flakeInputs; };
+                home-manager.sharedModules = [ nix-plist-manager.homeManagerModules.default ];
               }
             ];
           };

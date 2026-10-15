@@ -147,10 +147,18 @@ in
         action = "useHelperApp";
         ask = true;
         handlers = [
-          {
-            name = "GNOME Document Viewer";
-            path = "${pkgs.evince}/bin/evince";
-          }
+          (
+            if pkgs.stdenv.isDarwin then
+              {
+                name = "Preview";
+                path = "/System/Applications/Preview.app/Contents/MacOS/Preview";
+              }
+            else
+              {
+                name = "GNOME Document Viewer";
+                path = "${pkgs.evince}/bin/evince";
+              }
+          )
         ];
       };
     };

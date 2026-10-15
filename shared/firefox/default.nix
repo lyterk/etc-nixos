@@ -13,7 +13,7 @@ in
   programs.firefox = {
     enable = true;
     package = pkgs.firefox;
-    configPath = "${config.xdg.configHome}/mozilla/firefox";
+    # configPath = "${config.xdg.configHome}/mozilla/firefox";
     # nativeMessagingHosts.packages = [ pkgs.browserpass ];
     policies = lib.mkMerge [
       policies

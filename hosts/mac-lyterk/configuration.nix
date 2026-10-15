@@ -7,9 +7,12 @@
   ];
   # System-wide settings
   environment.systemPackages = with pkgs; [
+    alacritty
     cargo
     direnv
     fd
+    fish
+    cmake
     gcc
     git
     git
@@ -25,6 +28,13 @@
 
   environment.variables.HOMEBREW_NO_ANALYTICS = "1";
 
+  users.users.lyterk = {
+    name = "lyterk";
+    home = "/Users/lyterk"; # Explicitly set the absolute path here
+    shell = pkgs.fish;
+  };
+
+
   homebrew = {
     enable = true;
 
@@ -38,6 +48,8 @@
       "coreutils"
       "trash"
       "pinentry-mac"
+      "hax"
+      "fzf"
     ];
 
     # Update these applicatons manually.
@@ -50,6 +62,11 @@
 
     taps = [
       "railwaycat/emacsmacport" # emacs-mac
+      # "oleksandrchekhovskyi/hax"
+      {
+        name = "oleksandrchekhovskyi/hax";
+        trusted = true;
+      }
     ];
 
     masApps = {
@@ -65,6 +82,13 @@
 
   # Enable TouchID for sudo (optional, on supported hardware)
   security.pam.services.sudo_local.touchIdAuth = true;
+
+  # System-wide macOS settings managed by nix-plist-manager (exported via
+  # `nix run github:sushydev/nix-plist-manager#current -- mac-system.nix --scope system`).
+  programs.nix-plist-manager = {
+    enable = true;
+    options = import ./systemConfig/mac-system.nix;
+  };
 
   # Basic system preferences
   system.defaults.dock.autohide = true;
