@@ -85,6 +85,7 @@ in
         user.email = "kevin.lyter@yottanav.com";
         commit.gpgsign = true;
       };
+      ignores = [ ".dir-locals.el" ];
     };
 
     ssh = {

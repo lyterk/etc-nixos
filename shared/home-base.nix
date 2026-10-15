@@ -115,7 +115,6 @@ in
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
   # plain files is through 'home.file'.
   home.file = {
-    ".gitignore".source = ./gitignore;
     ".config/xdg-desktop-portal-termfilechooser/config".text = ''
       [filechooser]
       cmd=/run/current-system/sw/bin/yazi-filepicker.sh

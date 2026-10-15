@@ -270,3 +270,197 @@ I have these nix configuration files for my linux machines. I would like to set 
 :PROPERTIES:
 :ID:       7f9e8a5a-1acc-41bb-837e-74ca4f865e6b
 :END:
+
+
+(setq gptel-context '(("/etc/nixos/flake.nix" "/etc/nixos/hosts/mac-lyterk/configuration.nix" "/etc/nixos/hosts/mac-lyterk/home.nix" "/etc/nixos/shared/firefox/default.nix" "/etc/nixos/shared/sops.nix")))
+
+Here's what needs to happen:
+
+1. *Firefox*: Import the shared firefox module into =mac-lyterk/home.nix=
+2. *SSH/GPG keys*: Add sops-nix to the darwin configuration and add mac-specific secrets
+
+** Flake changes
+
+Add sops-nix to the darwin configuration:
+
+#+begin_src diff
+--- a/flake.nix
++++ b/flake.nix
+@@ -85,6 +85,7 @@
+             modules = [
+               home-manager.darwinModules.home-manager
++              sops-nix.homeManagerModules.sops
+               (./hosts + "/${name}" + /configuration.nix)
+               {
+                 home-manager.useGlobalPkgs = true;
+                 home-manager.useUserPackages = true;
+                 home-manager.users.lyterk = import (./hosts + "/${name}" + /home.nix);
++                home-manager.extraSpecialArgs = { inherit flakeInputs; };
+               }
+             ];
+           };
+#+end_src
+
+** =hosts/mac-lyterk/home.nix=
+
+#+begin_src diff
+--- a/hosts/mac-lyterk/home.nix
++++ b/hosts/mac-lyterk/home.nix
+@@ -1,7 +1,22 @@
+-{ pkgs, ... }:
++{ pkgs, flakeInputs, ... }:
+ 
+ {
++  imports = [
++    ../../shared/firefox
++  ];
++
+   home.username = "lyterk";
+   home.homeDirectory = "/Users/lyterk";
+   home.stateVersion = "26.05";
+ 
++  stylix = {
++    enable = true;
++    # Stylix requires an image even on darwin; reuse the same wallpaper
++    image = pkgs.fetchurl {
++      url = "https://getwallpapers.com/wallpaper/full/a/b/1/126669.jpg";
++      hash = "sha256-vxGCjrK1nYsMAQSfeJCb37j4/snuoK367gNw/GemAiw=";
++    };
++    targets.firefox.profileNames = [ "kevinDefault" ];
++  };
++
++  sops = {
++    age.keyFile = "/Users/lyterk/.config/sops/age/keys.txt";
++    defaultSopsFile = ../../secrets/default-secret.yaml;
++    secrets = {
++      homeSshPrivateKey = {
++        owner = "lyterk";
++        mode = "0600";
++        path = "/Users/lyterk/.ssh/id_ed25519";
++        sopsFile = ../../secrets/sshKeys.yaml;
++      };
++      gpgCode = {
++        path = "/Users/lyterk/.gnupg/code-gpg-key";
++        owner = "lyterk";
++        mode = "0600";
++      };
++      gpgKev = {
++        path = "/Users/lyterk/.gnupg/kev-gpg-key";
++        owner = "lyterk";
++        mode = "0600";
++      };
++    };
++  };
++
+   programs = {
+#+end_src
+
+** Key import via launchd
+
+Add GPG key import as a launchd activation script in =hosts/mac-lyterk/home.nix=:
+
+#+begin_src diff
++  home.activation.importGpgKeys = {
++    after = [ "writeBoundary" ];
++    before = [];
++    data = ''
++      if [ -f /Users/lyterk/.gnupg/code-gpg-key ]; then
++        ${pkgs.gnupg}/bin/gpg --import /Users/lyterk/.gnupg/code-gpg-key || true
++      fi
++      if [ -f /Users/lyterk/.gnupg/kev-gpg-key ]; then
++        ${pkgs.gnupg}/bin/gpg --import /Users/lyterk/.gnupg/kev-gpg-key || true
++      fi
++    '';
++  };
+#+end_src
+
+** Notes
+
+- You need to bootstrap sops on the mac by generating an age key: =age-keygen -o ~/.config/sops/age/keys.txt= and adding the public key to =.sops.yaml=
+- *Stylix on darwin* may require adding it to the darwin flake inputs too — check if =stylix.darwinModules= exists; if not, import only =stylix.homeManagerModules.stylix= instead
+- The firefox shared module uses =config.xdg.configHome= which works on darwin via home-manager
+* Fixing errors
+:PROPERTIES:
+:ID:       20f1a338-7921-4463-b9f1-4a9507252e60
+:END:
+
+#+BEGIN_QUOTE
+I'm seeing this error: What could be wrong with my config?
+
+(stack trace truncated; use '--show-trace' to show the full, detailed trace)
+
+       error: Refusing to evaluate package 'gnome-desktop-44.5' in /nix/store/zcqwwq108lzb92fggx0jaymdbb0b1lrb-source/pkgs/by-name/gn/gnome-desktop/package.nix:106 because it is not available on the requested hostPlatform:
+         hostPlatform.system = "aarch64-darwin"
+         package.meta.platforms = [
+           "i686-cygwin"
+           "x86_64-cygwin"
+           "x86_64-darwin"
+           "aarch64-darwin"
+           "i686-freebsd"
+           "x86_64-freebsd"
+           "aarch64-freebsd"
+           "x86_64-solaris"
+           "aarch64-linux"
+           "arc-linux"
+           "armv5tel-linux"
+           "armv6l-linux"
+           "armv7a-linux"
+           "armv7l-linux"
+           "i686-linux"
+           "loongarch64-linux"
+           "m68k-linux"
+           "sh4-linux"
+           "microblaze-linux"
+           "microblazeel-linux"
+           "mips-linux"
+           "mips64-linux"
+           "mips64el-linux"
+           "mipsel-linux"
+           "powerpc-linux"
+           "powerpc64-linux"
+           "powerpc64le-linux"
+           "riscv32-linux"
+           "riscv64-linux"
+           "s390-linux"
+           "s390x-linux"
+           "x86_64-linux"
+           "aarch64-netbsd"
+           "armv6l-netbsd"
+           "armv7a-netbsd"
+           "armv7l-netbsd"
+           "i686-netbsd"
+           "m68k-netbsd"
+           "mipsel-netbsd"
+           "powerpc-netbsd"
+           "riscv32-netbsd"
+           "riscv64-netbsd"
+           "x86_64-netbsd"
+           "i686-openbsd"
+           "x86_64-openbsd"
+           "x86_64-redox"
+         ]
+         package.meta.badPlatforms = [
+           "x86_64-darwin"
+           "aarch64-darwin"
+         ]
+
+       a) To temporarily allow packages that are unsupported for this system, you can use an environment variable
+          for a single invocation of the nix tools.
+
+            $ export NIXPKGS_ALLOW_UNSUPPORTED_SYSTEM=1
+
+          Note: When using `nix shell`, `nix build`, `nix develop`, etc with a flake,
+                then pass `--impure` in order to allow use of environment variables.
+
+       b) For `nixos-rebuild` you can set
+         { nixpkgs.config.allowUnsupportedSystem = true; }
+       in configuration.nix to override this.
+
+       c) For `nix-env`, `nix-build`, `nix-shell` or any other Nix command you can add
+         { allowUnsupportedSystem = true; }
+       to ~/.config/nixpkgs/config.nix.
+#+END_QUOTE
+** Response :ai:
+:PROPERTIES:
+:ID:       f8b1fec5-1dc5-419a-ac93-d416bda1539d
+:END:

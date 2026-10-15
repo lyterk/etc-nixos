@@ -83,11 +83,12 @@ in
         credential = {
           helper = "cache";
         };
-        core = {
-          excludesFile = "~/dotfiles/common/gitignore";
-        };
       };
+      ignores = [ ".dir-locals.el" ];
       signing.key = "0F39E83B";
+      extraConfig = {
+        init.defaultBranch = "mainline";
+      };
     };
 
     ssh = {
