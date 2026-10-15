@@ -52,9 +52,9 @@
       "fzf"
     ];
 
-    # Update these applicatons manually.
-    # As brew would update them by unninstalling and installing the newest
-    # version, it could lead to data loss.
+    # GUI apps managed via Homebrew casks. Note: onActivation.upgrade = true
+    # means these are upgraded on every darwin-rebuild (casks that self-update,
+    # like firefox, are skipped unless `greedy` is set).
     casks = [
       "emacs-mac" # Emacs fork with better macOS support
       "firefox"
