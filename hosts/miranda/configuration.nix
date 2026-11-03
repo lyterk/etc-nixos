@@ -69,6 +69,11 @@ in
   # console.keyMap = "dvorak";
   console.keyMap = "us";
 
+  hardware.graphics = {
+    enable = true;
+    enable32Bit = true;
+  };
+
   virtualisation.docker.enable = true;
 
   environment.systemPackages = with pkgs; [

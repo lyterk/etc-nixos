@@ -34,7 +34,7 @@ let
     qrencode
     transmission_4-qt
     libgourou # Adobe DRM removal
-    busybox # Deep debugging in the OS, lsusb
+    # busybox # Deep debugging in the OS, lsusb. Don't keep installed, overwrites useful utilities
   ];
   environments = with pkgs; [
     docker
