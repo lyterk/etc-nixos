@@ -84,7 +84,7 @@ in
           helper = "cache";
         };
       };
-      ignores = [ ".dir-locals.el" ];
+      ignores = import ../git/ignore.nix;
       signing.key = "0F39E83B";
       extraConfig = {
         init.defaultBranch = "mainline";
@@ -108,7 +108,7 @@ in
           identityFile = "~/.ssh/id_ed25519";
         };
         "bitbucket.org" = {
-          hostname = "bitbucket.org";
+          hostname = "ssh.bitbucket.org";
           user = "git";
           identityFile = "~/.ssh/id_ed25519";
         };

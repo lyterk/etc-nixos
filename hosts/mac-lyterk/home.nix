@@ -43,7 +43,6 @@
   #   };
   # };
 
-
   # Per-user macOS settings managed by nix-plist-manager (exported via
   # `nix run github:sushydev/nix-plist-manager#current -- mac-user.nix --scope user`).
   programs.nix-plist-manager = {
@@ -96,7 +95,7 @@
           identityFile = "~/.ssh/id_ed25519";
         };
         "bitbucket.org" = {
-          hostname = "bitbucket.org";
+          hostname = "ssh.bitbucket.org";
           user = "git";
           identityFile = "~/.ssh/id_ed25519";
         };
